@@ -80,11 +80,29 @@ xcb-xvmc
 "
 
 # Non-Windows: prefer dynamic libraries to static, and dump libtool helper files
+#
+# ... That was the intention, at least. Due to a typo, this logic did not run
+# on any platform, and so the macOS and Linux packages ended up containing the
+# static libraries and the Libtool helper files. Libtool helper files reference
+# each other and break builds if they are missing, so removal of these files
+# broke a variety of builds. So for the time being we intentionally continue
+# providing the files. The overall intended policy has not yet been decided;
+# cf: https://github.com/conda-forge/staged-recipes/issues/673
 if [ -z "$CYGWIN_PREFIX" ] ; then
     for lib_ident in $xcb_libs ; do
-        rm -f $uprefix/lib/lib${lib_ident}.la $uprefix/lib/lib${lib_ident}.a
+        ##rm -f $uprefix/lib/lib${lib_ident}.la $uprefix/lib/lib${lib_ident}.a
+        rm -f $uprefix/lib/lib${lib_ident}.a
     done
 fi
+
+# However, pursuant to the above, we copy Debian's approach of emptying the
+# `dependency_libs` line of the Libtool `.la` file to avoid overlinking and
+# the annoying interdependencies that hamstring us here. The information
+# contained in that field is not needed with modern shared libraries and
+# `pkg-config`. Here, for robustness we go ahead and rewrite all `.la` files
+# in $PREFIX.
+
+find $PREFIX -name '*.la' -print0 |xargs -0 sed -i -e "s/^dependency_libs=.*/dependency_libs='' # blanked out by conda-forge/"
 
 if [ "$(uname)" == "Linux" ]; then
     # Build a dummy libxcb-xlib. This library used to exist, but was
@@ -110,6 +128,6 @@ if [ "$(uname)" == "Linux" ]; then
     #
     #   /usr/lib64/libX11.so.6: undefined symbol: xcb_xlib_lock
     cd "$PREFIX/lib"
-    echo ' ' | $CC --shared -Wl,-soname,libxcb-xlib.so.0 -o libxcb-xlib.so.0.0.0 
+    echo ' ' | $CC --shared -Wl,-soname,libxcb-xlib.so.0 -o libxcb-xlib.so.0.0.0
     ln -s libxcb-xlib.so.0.0.0 libxcb-xlib.so.0
 fi
