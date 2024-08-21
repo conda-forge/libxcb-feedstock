@@ -109,3 +109,9 @@ if [ "$(uname)" == "Linux" ]; then
     echo ' ' | $CC --shared -Wl,-soname,libxcb-xlib.so.0 -o libxcb-xlib.so.0.0.0
     ln -s libxcb-xlib.so.0.0.0 libxcb-xlib.so.0
 fi
+
+# See https://github.com/conda-forge/libxcb-feedstock/issues/21 . For some
+# reason, the osx-arm64 install ends up containing inappropriate __pycache__
+# files in a site-packages subdirectory. Not at all clear why it only seems
+# to happen on that one platform, but no need to be ultra-precise:
+rm -rfv $PREFIX/lib/python*/site-packages/xcbgen
