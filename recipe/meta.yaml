@@ -17,7 +17,7 @@ source:
     - windows.patch  # [win]
 
 build:
-  number: 0
+  number: 1
   detect_binary_files_with_prefix: true
   run_exports:
     - {{ pin_subpackage('libxcb', max_pin='x.x') }}
@@ -32,7 +32,9 @@ requirements:
     - posix                         # [win]
     - gnuconfig  # [unix]
     - {{ compiler('c') }}           # [unix]
+    - {{ stdlib('c') }}             # [unix]
     - {{ compiler('m2w64_c') }}     # [win]
+    - {{ stdlib('m2w64_c') }}       # [win]
     - make                          # [unix]
     - autoconf                      # [unix]
     - automake                      # [unix]
