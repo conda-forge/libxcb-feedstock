@@ -1,8 +1,8 @@
 {% set xorg_name = "libxcb" %}
 {% set xorg_category = "lib" %}
 {% set name = "libxcb" %}
-{% set version = "1.16" %}
-{% set sha256 = "bc0f75f84b28e6496a19a1d094d7e47def861a50cb7cce5b23b62eecdc2a4479" %}
+{% set version = "1.17.0" %}
+{% set sha256 = "2c69287424c9e2128cb47ffe92171e10417041ec2963bceafb65cb3fcf8f0b85" %}
 {% set am_version = "1.15" %} # keep synchronized with build.sh
 
 package:
@@ -10,14 +10,13 @@ package:
   version: {{ version }}
 
 source:
-  fn: {{ xorg_name }}-{{ version }}.tar.bz2
   url: https://xorg.freedesktop.org/archive/individual/{{ xorg_category }}/{{ xorg_name }}-{{ version }}.tar.gz
   sha256: {{ sha256 }}
   patches:
     - windows.patch  # [win]
 
 build:
-  number: 1
+  number: 0
   detect_binary_files_with_prefix: true
   run_exports:
     - {{ pin_subpackage('libxcb', max_pin='x.x') }}
@@ -96,5 +95,4 @@ about:
 extra:
   recipe-maintainers:
     - ccordoba12
-    - mingwandroid
     - pkgw
