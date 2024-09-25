@@ -1,8 +1,8 @@
 diff --git a/configure.ac b/configure.ac
-index 4eb3e88..1df995e 100644
+index 4e6f028..031a3bd 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -139,7 +139,7 @@ esac
+@@ -140,7 +140,7 @@ esac
  have_win32="no"
  lt_enable_auto_import=""
  case $host_os in
@@ -11,7 +11,7 @@ index 4eb3e88..1df995e 100644
          have_win32="yes"
          lt_enable_auto_import="-Wl,--enable-auto-import"
          ;;
-@@ -211,7 +211,7 @@ esac
+@@ -212,7 +212,7 @@ esac
  
  dnl Link with winsock for socket functions on MinGW
  case $host_os in
@@ -20,7 +20,7 @@ index 4eb3e88..1df995e 100644
                  AC_CHECK_LIB([ws2_32],[main])
                  ;;
          *)
-@@ -251,16 +251,14 @@ AC_ARG_WITH(serverside-support, AS_HELP_STRING([--with-serverside-support], [Bui
+@@ -252,16 +252,14 @@ AC_ARG_WITH(serverside-support, AS_HELP_STRING([--with-serverside-support], [Bui
  
  AM_CONDITIONAL(XCB_SERVERSIDE_SUPPORT, test "x$XCB_SERVERSIDE_SUPPORT" = "xyes")
  
@@ -39,7 +39,7 @@ index 4eb3e88..1df995e 100644
  xcb-composite.pc
  xcb-damage.pc
  xcb-dbe.pc
-@@ -291,8 +289,7 @@ xcb-xv.pc
+@@ -292,8 +290,7 @@ xcb-xv.pc
  xcb-xvmc.pc
  ])
  
@@ -49,23 +49,3 @@ index 4eb3e88..1df995e 100644
  ])
  
  AC_OUTPUT
-diff --git a/src/xcb_util.c b/src/xcb_util.c
-index 5b1f495..eb21653 100644
---- a/src/xcb_util.c
-+++ b/src/xcb_util.c
-@@ -244,6 +244,7 @@ static int _xcb_open(const char *host, char *protocol, const int display)
-     char *file = NULL;
-     int actual_filelen;
- 
-+#ifndef _WIN32
-     if (protocol && strcmp("unix", protocol) == 0 && host && host[0] == '/') {
-         /* Full path to socket provided, ignore everything else */
-         filelen = strlen(host) + 1;
-@@ -255,6 +256,7 @@ static int _xcb_open(const char *host, char *protocol, const int display)
-         memcpy(file, host, filelen);
-         actual_filelen = (int)(filelen - 1);
-     } else {
-+#endif
-         /* If protocol or host is "unix", fall through to Unix socket code below */
-         if ((!protocol || (strcmp("unix",protocol) != 0)) &&
-             (*host != '\0') && (strcmp("unix",host) != 0))
