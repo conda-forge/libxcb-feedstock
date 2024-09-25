@@ -198,6 +198,5 @@ Feedstock Maintainers
 =====================
 
 * [@ccordoba12](https://github.com/ccordoba12/)
-* [@mingwandroid](https://github.com/mingwandroid/)
 * [@pkgw](https://github.com/pkgw/)
 
