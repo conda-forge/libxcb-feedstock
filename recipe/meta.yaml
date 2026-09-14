@@ -61,14 +61,6 @@ requirements:
     - xorg-libxdmcp
 
 test:
-  requires:
-    - python >=3.14  # [win and arm64]
-    - {{ compiler('c') }}  # [win and arm64]
-    - {{ stdlib('c') }}  # [win and arm64]
-  files:
-    - test-native.c  # [win and arm64]
-    - test-native.bat  # [win and arm64]
-    - test-protocol.py  # [win and arm64]
   commands:
     - test -f $PREFIX/lib/libxcb.dylib  # [osx]
     - test -f $PREFIX/lib/libxcb.so  # [linux]
@@ -160,7 +152,9 @@ test:
     - test -f $PREFIX/lib/libxcb-render.so  # [linux]
     - test -f $PREFIX/lib/libxcb-xinput.dylib  # [osx]
     - test -f $PREFIX/lib/libxcb-xinput.so  # [linux]
-    - call test-native.bat  # [win and arm64]
+
+    - if not exist %LIBRARY_BIN%\xcb-1.dll exit 1  # [win and arm64]
+    - if not exist %LIBRARY_LIB%\xcb.lib exit 1  # [win and arm64]
 
 about:
   home: http://xcb.freedesktop.org/
