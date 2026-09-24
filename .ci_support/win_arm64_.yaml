@@ -1,0 +1,14 @@
+c_compiler:
+- clang
+c_compiler_version:
+- '23.1'
+c_stdlib:
+- vs
+channel_sources:
+- conda-forge
+channel_targets:
+- conda-forge main
+libxcb:
+- '1'
+target_platform:
+- win-arm64

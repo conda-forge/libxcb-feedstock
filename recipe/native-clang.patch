@@ -1,0 +1,108 @@
+Use the Clang GNU driver with MSVC-style libtool exports and the X11
+Windows header wrappers. Header fixes follow the Windows portability fixes
+in microsoft/vcpkg ports/libxcb (use_xwindows_includes and getpid_include).
+Both the generated configure and its macro sources are kept consistent.
+This patch is applied only to the native Windows ARM64 build.
+
+--- a/configure
++++ b/configure
+@@ -11540,7 +11540,7 @@
+             cp "$export_symbols" "$output_objdir/$soname.def";
+             echo "$tool_output_objdir$soname.def" > "$output_objdir/$soname.exp";
+           else
+-            $SED -e '\''s/^/-link -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
++            $SED -e '\''s/^/-Xlinker -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
+           fi~
+           $CC -o $tool_output_objdir$soname $libobjs $compiler_flags $deplibs "@$tool_output_objdir$soname.exp" -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~
+           linknames='
+@@ -21543,7 +21543,7 @@
+ case $host_os in
+ mingw*)
+         have_win32="yes"
+-        lt_enable_auto_import="-Wl,--enable-auto-import"
++        lt_enable_auto_import="" # LLD uses explicit MSVC DLL imports, not GNU auto-import.
+         ;;
+ linux*)
+ 
+--- a/m4/libtool.m4
++++ b/m4/libtool.m4
+@@ -5610,7 +5610,7 @@
+             cp "$export_symbols" "$output_objdir/$soname.def";
+             echo "$tool_output_objdir$soname.def" > "$output_objdir/$soname.exp";
+           else
+-            $SED -e '\''s/^/-link -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
++            $SED -e '\''s/^/-Xlinker -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
+           fi~
+           $CC -o $tool_output_objdir$soname $libobjs $compiler_flags $deplibs "@$tool_output_objdir$soname.exp" -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~
+           linknames='
+@@ -6684,7 +6684,7 @@
+               cp "$export_symbols" "$output_objdir/$soname.def";
+               echo "$tool_output_objdir$soname.def" > "$output_objdir/$soname.exp";
+             else
+-              $SED -e '\''s/^/-link -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
++              $SED -e '\''s/^/-Xlinker -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
+             fi~
+             $CC -o $tool_output_objdir$soname $libobjs $compiler_flags $deplibs "@$tool_output_objdir$soname.exp" -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~
+             linknames='
+--- a/configure.ac
++++ b/configure.ac
+@@ -142,7 +142,7 @@
+ case $host_os in
+ mingw*)
+         have_win32="yes"
+-        lt_enable_auto_import="-Wl,--enable-auto-import"
++        lt_enable_auto_import="" # LLD uses explicit MSVC DLL imports, not GNU auto-import.
+         ;;
+ linux*)
+         AC_DEFINE([HAVE_ABSTRACT_SOCKETS], 1, [Define if your platform supports abstract sockets])
+--- a/src/xcb_auth.c
++++ b/src/xcb_auth.c
+@@ -40,12 +40,10 @@
+ #endif
+ 
+ #ifdef _WIN32
+-#ifdef HASXDMAUTH
+-/* We must include the wrapped windows.h before any system header which includes
+-   it unwrapped, to avoid conflicts with types defined in X headers */
+-#include <X11/Xwindows.h>
+-#endif
+ #include "xcb_windefs.h"
++#ifdef _MSC_VER
++#include <process.h>
++#endif
+ #else
+ #include <sys/param.h>
+ #include <unistd.h>
+--- a/src/xcb_windefs.h
++++ b/src/xcb_windefs.h
+@@ -31,9 +31,15 @@
+ #define WINVER 0x0501 /* required for getaddrinfo/freeaddrinfo defined only for WinXP and above */
+ #endif
+ 
+-#include <winsock2.h>
++#include <stdio.h>
++#include <X11/Xwinsock.h>
+ #include <ws2tcpip.h>
+-#include <windef.h>
++#include <X11/Xwindows.h>
++typedef unsigned char BYTE;
++
++#ifndef STDERR_FILENO
++#define STDERR_FILENO _fileno(stderr)
++#endif
+ 
+ struct iovec  {
+     void *iov_base;    /* Pointer to data.  */
+--- a/src/xcb_util.c
++++ b/src/xcb_util.c
+@@ -359,8 +359,8 @@
+     if(fd < 0)
+         return -1;
+ 
+-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+-    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on));
++    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&on, sizeof(on));
++    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (const char *)&on, sizeof(on));
+ 
+     return connect(fd, addr, addrlen);
+ }
